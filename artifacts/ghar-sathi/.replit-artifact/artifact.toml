@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Ghar Sathi"
+description = "A two-sided house-help marketplace in Pakistan. Clients discover nearby verified helpers, agree on pay and working hours, and chat; helpers set their skills, location, and rates and respond to work offers."
+version = "1.0.0"
+id = "artifacts/ghar-sathi"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 25861
+
+[services.development]
+run = "pnpm --filter @workspace/ghar-sathi run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ghar-sathi", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/ghar-sathi", "run", "serve" ]
+
+[services.env]
+PORT = "25861"
+BASE_PATH = "/"
