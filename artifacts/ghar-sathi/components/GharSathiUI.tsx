@@ -244,6 +244,39 @@ export function Chip({
   );
 }
 
+export function LanguageSwitcher() {
+  const colors = useColors();
+  const { t, language, setLanguage } = useLanguage();
+
+  return (
+    <View style={{ gap: 7 }}>
+      <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: '600' }}>
+        {t('language')}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        <Chip
+          label="English"
+          selected={language === 'en'}
+          onPress={() => setLanguage('en')}
+          testID="language-en"
+        />
+        <Chip
+          label="اردو"
+          selected={language === 'ur'}
+          onPress={() => setLanguage('ur')}
+          testID="language-ur"
+        />
+        <Chip
+          label="Roman Urdu"
+          selected={language === 'romanUrdu'}
+          onPress={() => setLanguage('romanUrdu')}
+          testID="language-roman-urdu"
+        />
+      </View>
+    </View>
+  );
+}
+
 export function StatusPill({ status }: { status: string }) {
   const colors = useColors();
   const { t } = useLanguage();

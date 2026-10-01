@@ -1,9 +1,9 @@
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Linking, Platform, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, Text, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { ActionButton, Chip, ContentScroll, InlineMessage, InputField, Screen, Surface } from '@/components/GharSathiUI';
+import { ActionButton, Chip, ContentScroll, InlineMessage, InputField, LanguageSwitcher, Screen, Surface } from '@/components/GharSathiUI';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/lib/locale';
 import { useGetMe, useSaveMyProfile } from '@workspace/api-client-react';
@@ -155,6 +155,7 @@ export default function OnboardingScreen() {
   return (
     <Screen>
       <ContentScroll style={{ paddingTop: 12, paddingBottom: 42 }}>
+        <LanguageSwitcher />
         <View style={{ gap: 7 }}>
           <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700', letterSpacing: 1.2 }}>
             GHAR SATHI · SETUP
@@ -168,31 +169,38 @@ export default function OnboardingScreen() {
         </View>
 
         <Surface style={{ marginTop: 8 }}>
-          <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '700' }}>I am here to…</Text>
+          <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: '700' }}>
+            {t('rolePrompt')}
+          </Text>
           <View style={{ gap: 10 }}>
             {(['client', 'helper'] as Role[]).map((value) => {
               const selected = role === value;
               return (
-                <Text
+                <Pressable
                   key={value}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
+                  testID={`role-${value}`}
                   onPress={() => setRole(value)}
                   style={{
                     backgroundColor: selected ? colors.accent : colors.card,
                     borderColor: selected ? colors.primary : colors.border,
                     borderWidth: 1,
                     borderRadius: 15,
-                    overflow: 'hidden',
-                    color: selected ? colors.accentForeground : colors.foreground,
                     paddingHorizontal: 14,
                     paddingVertical: 14,
-                    fontSize: 14,
-                    fontWeight: '600',
                   }}
                 >
-                  {value === 'client' ? t('client') : t('helper')}
-                </Text>
+                  <Text
+                    style={{
+                      color: selected ? colors.accentForeground : colors.foreground,
+                      fontSize: 15,
+                      fontWeight: '700',
+                    }}
+                  >
+                    {value === 'client' ? t('client') : t('helper')}
+                  </Text>
+                </Pressable>
               );
             })}
           </View>
@@ -254,14 +262,6 @@ export default function OnboardingScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <InputField label="Maximum" value={rateMax} onChangeText={setRateMax} keyboardType="number-pad" />
-            </View>
-          </View>
-          <View style={{ gap: 8 }}>
-            <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: '600' }}>{t('language')}</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              <Chip label="English" selected={language === 'en'} onPress={() => setLanguage('en')} />
-              <Chip label="اردو" selected={language === 'ur'} onPress={() => setLanguage('ur')} />
-              <Chip label="Roman Urdu" selected={language === 'romanUrdu'} onPress={() => setLanguage('romanUrdu')} />
             </View>
           </View>
           <InlineMessage text={error} />

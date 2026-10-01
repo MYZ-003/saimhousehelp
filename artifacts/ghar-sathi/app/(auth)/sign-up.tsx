@@ -10,6 +10,7 @@ import {
   ContentScroll,
   InlineMessage,
   InputField,
+  LanguageSwitcher,
   Screen,
   Surface,
 } from '@/components/GharSathiUI';
@@ -133,6 +134,7 @@ export default function SignUpScreen() {
   return (
     <Screen>
       <ContentScroll style={{ paddingTop: 16, paddingBottom: 36 }}>
+        <LanguageSwitcher />
         <BrandHeader eyebrow={t('tagline')} />
         <View style={{ height: 28 }} />
         <View style={{ gap: 8 }}>
