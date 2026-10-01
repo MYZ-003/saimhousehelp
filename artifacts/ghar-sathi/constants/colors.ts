@@ -14,46 +14,46 @@
 
 const colors = {
   light: {
-    // Legacy aliases (kept for backward compatibility)
-    text: '#0a0a0a',
-    tint: '#2f95dc',
-
-    // Core surfaces
-    background: '#ffffff',
-    foreground: '#0a0a0a',
-
-    // Cards / elevated surfaces
-    card: '#f9f9f9',
-    cardForeground: '#0a0a0a',
-
-    // Primary action color (buttons, links, active states)
-    primary: '#2f95dc',
-    primaryForeground: '#ffffff',
-
-    // Secondary / less-emphasis interactive surfaces
-    secondary: '#f0f0f0',
-    secondaryForeground: '#1a1a1a',
-
-    // Muted / subdued elements (dividers, timestamps, placeholders)
-    muted: '#f0f0f0',
-    mutedForeground: '#737373',
-
-    // Accent highlights (badges, selected items, focus rings)
-    accent: '#f0f0f0',
-    accentForeground: '#1a1a1a',
-
-    // Destructive actions (delete, error states)
-    destructive: '#ef4444',
-    destructiveForeground: '#ffffff',
-
-    // Borders and input outlines
-    border: '#e5e5e5',
-    input: '#e5e5e5',
+    text: '#2B211B',
+    tint: '#C6530A',
+    background: '#FFF9F4',
+    foreground: '#2B211B',
+    card: '#FFFFFF',
+    cardForeground: '#2B211B',
+    primary: '#B94B08',
+    primaryForeground: '#FFFFFF',
+    secondary: '#F7ECE2',
+    secondaryForeground: '#4A3021',
+    muted: '#F4EEE8',
+    mutedForeground: '#75665C',
+    accent: '#FFE3CF',
+    accentForeground: '#793500',
+    destructive: '#B42318',
+    destructiveForeground: '#FFFFFF',
+    border: '#E8DBD1',
+    input: '#D8C8BC',
   },
-
-  // Border radius (in px). Sync from the sibling web artifact's --radius
-  // CSS variable. This value applies to cards, buttons, inputs, and modals.
-  radius: 8,
+  dark: {
+    text: '#F8F0E9',
+    tint: '#FF9A5B',
+    background: '#18110D',
+    foreground: '#F8F0E9',
+    card: '#241A13',
+    cardForeground: '#F8F0E9',
+    primary: '#FF9A5B',
+    primaryForeground: '#29180F',
+    secondary: '#34261C',
+    secondaryForeground: '#F8EADD',
+    muted: '#2B2019',
+    mutedForeground: '#C4AEA0',
+    accent: '#3B281B',
+    accentForeground: '#FFD6B5',
+    destructive: '#F87171',
+    destructiveForeground: '#32090B',
+    border: '#48372C',
+    input: '#4A3A2E',
+  },
+  radius: 10,
 };
 
 export default colors;

@@ -8,14 +8,14 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Apply `supabase/migrations/20260602000000_ghar_sathi_marketplace.sql` to the connected Supabase project before marketplace endpoints are used.
+- Required server-only secret: `SUPABASE_DATABASE_URL` — Supabase PostgreSQL connection string (prefer the Supabase pooler URL for hosted deployments; include SSL as shown by Supabase).
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: Supabase PostgreSQL, accessed only by the server through `SUPABASE_DATABASE_URL`
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)

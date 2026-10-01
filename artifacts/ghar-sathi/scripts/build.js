@@ -138,10 +138,22 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
 
   console.log('Starting Metro...');
   console.log(`Setting EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`);
+  const clerkPublishableKey =
+    process.env.CLERK_PUBLISHABLE_KEY ||
+    process.env.VITE_CLERK_PUBLISHABLE_KEY ||
+    process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!clerkPublishableKey) {
+    throw new Error('Missing Clerk publishable key for the Ghar Sathi Expo build.');
+  }
+  const clerkProxyUrl = process.env.CLERK_PROXY_URL
+    ? `https://${expoPublicDomain}${process.env.CLERK_PROXY_URL}`
+    : '';
   const env = {
     ...process.env,
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
     EXPO_PUBLIC_REPL_ID: expoPublicReplId,
+    EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkPublishableKey,
+    EXPO_PUBLIC_CLERK_PROXY_URL: clerkProxyUrl,
   };
 
   if (expoPublicReplId) {

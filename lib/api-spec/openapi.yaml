@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: marketplace
+    description: House-helper marketplace operations
 paths:
   /healthz:
     get:
@@ -24,7 +26,355 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /me:
+    get:
+      operationId: getMe
+      tags: [marketplace]
+      summary: Get the signed-in user's profile
+      responses:
+        "200":
+          description: Profile or null if onboarding has not been completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyProfileResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    put:
+      operationId: saveMyProfile
+      tags: [marketplace]
+      summary: Create or update the signed-in user's own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyProfileResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: Request body exceeds the configured size limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Account role cannot be changed after onboarding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    delete:
+      operationId: deleteMe
+      tags: [marketplace]
+      summary: Delete the signed-in user's account and associated marketplace data
+      responses:
+        "204":
+          description: Account and associated data deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /helpers:
+    get:
+      operationId: findHelpers
+      tags: [marketplace]
+      summary: Find nearby helper profiles using the signed-in client's location
+      parameters:
+        - name: radiusKm
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            maximum: 100
+        - name: workType
+          in: query
+          schema:
+            type: string
+            maxLength: 60
+      responses:
+        "200":
+          description: Public helper cards with approximate distance only
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HelperPreview"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: Only client accounts can discover helpers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /swipes:
+    post:
+      operationId: createSwipe
+      tags: [marketplace]
+      summary: Record a client swipe and optionally send a paid work offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeInput"
+      responses:
+        "201":
+          description: Swipe recorded; right swipes with an offer notify the helper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Only client accounts can swipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: An accepted offer already has a conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: Request body exceeds the configured size limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [marketplace]
+      summary: List offers where the signed-in user is the client or helper
+      responses:
+        "200":
+          description: Offers visible to the signed-in user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /offers/{offerId}:
+    patch:
+      operationId: decideOffer
+      tags: [marketplace]
+      summary: Accept, decline, or counter an offer addressed to the signed-in user
+      parameters:
+        - $ref: "#/components/parameters/OfferId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferDecisionInput"
+      responses:
+        "200":
+          description: Updated offer and optional conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferDecisionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: Request body exceeds the configured size limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [marketplace]
+      summary: List notifications addressed only to the signed-in user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /notifications/{notificationId}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [marketplace]
+      summary: Mark one of the signed-in user's notifications as read
+      parameters:
+        - $ref: "#/components/parameters/NotificationId"
+      responses:
+        "204":
+          description: Notification marked read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [marketplace]
+      summary: List conversations for the signed-in user
+      responses:
+        "200":
+          description: Conversations visible to the signed-in user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /conversations/{conversationId}/messages:
+    parameters:
+      - $ref: "#/components/parameters/ConversationId"
+    get:
+      operationId: getMessages
+      tags: [marketplace]
+      summary: List messages after checking conversation membership
+      responses:
+        "200":
+          description: Conversation messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      operationId: sendMessage
+      tags: [marketplace]
+      summary: Send a text or short voice message in a conversation the user belongs to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          description: Request body exceeds the configured size limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
+  parameters:
+    OfferId:
+      name: offerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Sign-in required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found or not accessible to this user
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Marketplace database is not configured or unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +383,218 @@ components:
           type: string
       required:
         - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Profile:
+      type: object
+      properties:
+        id: { type: string }
+        role: { type: string, enum: [client, helper] }
+        fullName: { type: string }
+        language: { type: string, enum: [en, ur, romanUrdu] }
+        city: { type: string }
+        area: { type: string }
+        latitude: { type: ["number", "null"] }
+        longitude: { type: ["number", "null"] }
+        radiusKm: { type: integer }
+        skills: { type: array, items: { type: string } }
+        workTypes: { type: array, items: { type: string } }
+        serviceHoursMin: { type: ["integer", "null"], minimum: 1, maximum: 24 }
+        serviceHoursMax: { type: ["integer", "null"], minimum: 1, maximum: 24 }
+        rateMinPkr: { type: ["integer", "null"] }
+        rateMaxPkr: { type: ["integer", "null"] }
+        natureOfWork: { type: ["string", "null"] }
+        about: { type: ["string", "null"] }
+        verificationStatus: { type: string, enum: [unverified, pending, verified, rejected] }
+        createdAt: { type: string, format: date-time }
+      required:
+        - id
+        - role
+        - fullName
+        - language
+        - city
+        - area
+        - latitude
+        - longitude
+        - radiusKm
+        - skills
+        - workTypes
+        - serviceHoursMin
+        - serviceHoursMax
+        - rateMinPkr
+        - rateMaxPkr
+        - natureOfWork
+        - about
+        - verificationStatus
+        - createdAt
+    MyProfileResponse:
+      type: object
+      properties:
+        profile:
+          anyOf:
+            - $ref: "#/components/schemas/Profile"
+            - type: "null"
+      required: [profile]
+    ProfileInput:
+      type: object
+      properties:
+        role: { type: string, enum: [client, helper] }
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        language: { type: string, enum: [en, ur, romanUrdu] }
+        city: { type: string, minLength: 2, maxLength: 80 }
+        area: { type: string, minLength: 2, maxLength: 100 }
+        latitude: { type: ["number", "null"], minimum: -90, maximum: 90 }
+        longitude: { type: ["number", "null"], minimum: -180, maximum: 180 }
+        radiusKm: { type: integer, minimum: 1, maximum: 100 }
+        skills: { type: array, items: { type: string, maxLength: 60 }, maxItems: 12 }
+        workTypes: { type: array, items: { type: string, maxLength: 60 }, maxItems: 12 }
+        serviceHoursMin: { type: ["integer", "null"], minimum: 1, maximum: 24 }
+        serviceHoursMax: { type: ["integer", "null"], minimum: 1, maximum: 24 }
+        rateMinPkr: { type: ["integer", "null"], minimum: 0, maximum: 1000000 }
+        rateMaxPkr: { type: ["integer", "null"], minimum: 0, maximum: 1000000 }
+        natureOfWork: { type: ["string", "null"], maxLength: 300 }
+        about: { type: ["string", "null"], maxLength: 800 }
+      required:
+        - role
+        - fullName
+        - language
+        - city
+        - area
+        - latitude
+        - longitude
+        - radiusKm
+        - skills
+        - workTypes
+        - serviceHoursMin
+        - serviceHoursMax
+        - rateMinPkr
+        - rateMaxPkr
+        - natureOfWork
+        - about
+    HelperPreview:
+      type: object
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        city: { type: string }
+        area: { type: string }
+        distanceKm: { type: number }
+        skills: { type: array, items: { type: string } }
+        workTypes: { type: array, items: { type: string } }
+        serviceHoursMin: { type: ["integer", "null"] }
+        serviceHoursMax: { type: ["integer", "null"] }
+        rateMinPkr: { type: ["integer", "null"] }
+        rateMaxPkr: { type: ["integer", "null"] }
+        natureOfWork: { type: ["string", "null"] }
+        about: { type: ["string", "null"] }
+        verificationStatus: { type: string, enum: [unverified, pending, verified, rejected] }
+      required:
+        - id
+        - fullName
+        - city
+        - area
+        - distanceKm
+        - skills
+        - workTypes
+        - serviceHoursMin
+        - serviceHoursMax
+        - rateMinPkr
+        - rateMaxPkr
+        - natureOfWork
+        - about
+        - verificationStatus
+    SwipeInput:
+      type: object
+      properties:
+        helperId: { type: string, minLength: 1 }
+        direction: { type: string, enum: [left, right] }
+        offerAmountPkr: { type: ["integer", "null"], minimum: 0, maximum: 1000000 }
+        workType: { type: string, maxLength: 60 }
+        durationHours: { type: number, minimum: 0.5, maximum: 24 }
+        workDescription: { type: string, maxLength: 500 }
+      required: [helperId, direction, offerAmountPkr, workType, durationHours, workDescription]
+    SwipeResult:
+      type: object
+      properties:
+        recorded: { type: boolean }
+        offerId: { type: ["string", "null"], format: uuid }
+        helperNotified: { type: boolean }
+      required: [recorded, offerId, helperNotified]
+    Offer:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        otherUserId: { type: string }
+        otherName: { type: string }
+        myRole: { type: string, enum: [client, helper] }
+        amountPkr: { type: integer }
+        counterAmountPkr: { type: ["integer", "null"] }
+        durationHours: { type: number }
+        workType: { type: string }
+        workDescription: { type: string }
+        status: { type: string, enum: [pending, accepted, declined, countered] }
+        createdAt: { type: string, format: date-time }
+        conversationId: { type: ["string", "null"], format: uuid }
+      required: [id, otherUserId, otherName, myRole, amountPkr, counterAmountPkr, durationHours, workType, workDescription, status, createdAt, conversationId]
+    OfferDecisionInput:
+      type: object
+      properties:
+        action: { type: string, enum: [accept, decline, counter] }
+        counterAmountPkr: { type: integer, minimum: 0, maximum: 1000000 }
+      required: [action]
+    OfferDecisionResult:
+      type: object
+      properties:
+        offer:
+          $ref: "#/components/schemas/Offer"
+        conversationId:
+          type: ["string", "null"]
+          format: uuid
+      required: [offer, conversationId]
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string }
+        title: { type: string }
+        body: { type: string }
+        offerId: { type: ["string", "null"], format: uuid }
+        conversationId: { type: ["string", "null"], format: uuid }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+      required: [id, kind, title, body, offerId, conversationId, read, createdAt]
+    Conversation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        otherUserId: { type: string }
+        otherName: { type: string }
+        lastMessage: { type: ["string", "null"] }
+        lastMessageAt: { type: ["string", "null"], format: date-time }
+        unreadCount: { type: integer }
+      required: [id, otherUserId, otherName, lastMessage, lastMessageAt, unreadCount]
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        conversationId: { type: string, format: uuid }
+        senderId: { type: string }
+        text: { type: ["string", "null"] }
+        voiceBase64: { type: ["string", "null"] }
+        voiceMimeType: { type: ["string", "null"] }
+        durationSeconds: { type: ["number", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, conversationId, senderId, text, voiceBase64, voiceMimeType, durationSeconds, createdAt]
+    MessageInput:
+      type: object
+      properties:
+        text: { type: ["string", "null"], maxLength: 2000 }
+        voiceBase64: { type: ["string", "null"], maxLength: 7000000 }
+        voiceMimeType: { type: ["string", "null"], maxLength: 100 }
+        durationSeconds: { type: ["number", "null"], minimum: 0.01, maximum: 60 }
+      required: [text, voiceBase64, voiceMimeType, durationSeconds]
 
