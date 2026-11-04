@@ -5,7 +5,7 @@ export type Language = 'en' | 'ur' | 'romanUrdu';
 
 const copy: Record<Language, Record<string, string>> = {
   en: {
-    brand: 'Ghar Sathi',
+    brand: 'MAID.com',
     tagline: 'Good help. Right at home.',
     discover: 'Discover',
     requests: 'Requests',
@@ -48,7 +48,7 @@ const copy: Record<Language, Record<string, string>> = {
     databaseUnavailable: 'The marketplace database is not connected yet.',
   },
   ur: {
-    brand: 'گھر ساتھی',
+    brand: 'MAID.com',
     tagline: 'گھر کے کام کے لیے قابلِ اعتماد مدد',
     discover: 'تلاش',
     requests: 'درخواستیں',
@@ -91,7 +91,7 @@ const copy: Record<Language, Record<string, string>> = {
     databaseUnavailable: 'مارکیٹ پلیس کا ڈیٹا بیس ابھی منسلک نہیں ہے۔',
   },
   romanUrdu: {
-    brand: 'Ghar Sathi',
+    brand: 'MAID.com',
     tagline: 'Ghar ke kaam ke liye bharosemand madad',
     discover: 'Dhoondein',
     requests: 'Darkhwastein',

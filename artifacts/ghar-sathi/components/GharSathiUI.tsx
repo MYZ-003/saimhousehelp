@@ -41,7 +41,7 @@ export function BrandMark({ size = 44 }: { size?: number }) {
     <Image
       source={require('../assets/images/icon.png')}
       style={{ width: size, height: size, borderRadius: size * 0.24 }}
-      accessibilityLabel="Ghar Sathi"
+      accessibilityLabel="MAID.com"
     />
   );
 }

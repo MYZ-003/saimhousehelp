@@ -8,8 +8,76 @@ import { ActionButton, Chip, ContentScroll, InlineMessage, PageHeader, Screen, S
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/lib/locale';
 import { useDeleteMe, useGetMe } from '@workspace/api-client-react';
+import { useDemoAuth } from '@/lib/demo-auth';
 
-export default function ProfileScreen() {
+const demoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+
+function DemoProfileScreen() {
+  const colors = useColors();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { signOut, user } = useDemoAuth();
+  const { t } = useLanguage();
+  const profileQuery = useGetMe({ query: { queryKey: ['get-me', user?.id] } });
+  const profile = profileQuery.data?.profile;
+
+  const logout = async () => {
+    await signOut();
+    queryClient.clear();
+    router.replace('/(auth)/sign-in');
+  };
+
+  if (!profile) {
+    return (
+      <Screen>
+        <PageHeader title={t('profile')} />
+        <ContentScroll>
+          <InlineMessage text="This local demo has no saved profile yet." />
+          <ActionButton label="Finish profile setup" onPress={() => router.replace('/onboarding')} />
+          <ActionButton label="Sign out of demo" variant="outline" onPress={() => void logout()} />
+        </ContentScroll>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <PageHeader title={t('profile')} subtitle="Local demo account" />
+      <ContentScroll>
+        <Surface>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
+            <View style={{ width: 58, height: 58, borderRadius: 20, backgroundColor: colors.accent, justifyContent: 'center', alignItems: 'center' }}>
+              <Feather name="user" size={26} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={{ color: colors.foreground, fontSize: 19, fontWeight: '700' }}>{profile.fullName}</Text>
+              <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
+                {profile.role === 'client' ? 'Client' : 'Household helper'} · {profile.city}
+              </Text>
+            </View>
+          </View>
+          <StatusPill status={profile.verificationStatus} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <Chip label={profile.area} />
+            {(profile.role === 'helper' ? profile.skills : profile.workTypes).map((skill) => (
+              <Chip key={skill} label={skill} />
+            ))}
+          </View>
+          <ActionButton label="Edit profile" icon="edit-2" variant="outline" onPress={() => router.push('/onboarding')} />
+        </Surface>
+        <Surface>
+          <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>Demo account</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 20 }}>
+            {user?.email} · local-only data, no Clerk or Supabase connection.
+          </Text>
+          <ActionButton label="Sign out of demo" icon="log-out" variant="outline" onPress={() => void logout()} />
+        </Surface>
+      </ContentScroll>
+    </Screen>
+  );
+}
+
+function ClerkProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -120,4 +188,8 @@ export default function ProfileScreen() {
       </ContentScroll>
     </Screen>
   );
+}
+
+export default function ProfileScreen() {
+  return demoMode ? <DemoProfileScreen /> : <ClerkProfileScreen />;
 }

@@ -1,56 +1,110 @@
-const { spawn, spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
 
-const session = process.env.REPLIT_EXPO_SESSION_SECRET;
-if (session) {
-  // Replit's short-lived Expo CLI login is intentionally non-fatal.
-  spawnSync('pnpm', ['exec', 'create-launch', 'login', '--session', session], {
-    stdio: 'inherit',
-  });
+const projectRoot = path.resolve(__dirname, '..');
+const workspaceRoot = path.resolve(projectRoot, '../..');
+const envFile = path.join(workspaceRoot, '.env');
+
+if (fs.existsSync(envFile)) {
+  process.loadEnvFile(envFile);
 }
 
-const required = ['PORT', 'REPLIT_DEV_DOMAIN'];
-const missing = required.filter((key) => !process.env[key]);
-if (missing.length) {
-  console.error(`Missing Expo workflow environment: ${missing.join(', ')}`);
-  process.exit(1);
-}
-
+const isReplit = Boolean(process.env.REPLIT_DEV_DOMAIN);
+const demoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+const legacyDomain =
+  process.env.EXPO_PUBLIC_DOMAIN || process.env.REPLIT_DEV_DOMAIN;
+const apiUrl =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (legacyDomain ? `https://${legacyDomain}` : undefined);
 const publishableKey =
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   process.env.CLERK_PUBLISHABLE_KEY ||
-  process.env.VITE_CLERK_PUBLISHABLE_KEY ||
-  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-if (!publishableKey) {
-  console.error('Missing Clerk publishable key for the Ghar Sathi Expo app.');
+  process.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!demoMode && !apiUrl) {
+  console.error(
+    'Missing EXPO_PUBLIC_API_URL. Set it in the root .env file (for example, http://192.168.1.3:5000).',
+  );
   process.exit(1);
 }
 
-const devDomain = process.env.REPLIT_DEV_DOMAIN;
-const expoPackagerDomain = process.env.REPLIT_EXPO_DEV_DOMAIN || devDomain;
-const clerkProxyUrl = process.env.CLERK_PROXY_URL
-  ? `https://${devDomain}${process.env.CLERK_PROXY_URL}`
-  : '';
+if (!demoMode && !publishableKey) {
+  console.error(
+    'Missing Clerk publishable key. Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in the root .env file.',
+  );
+  process.exit(1);
+}
+
+const portValue =
+  process.env.EXPO_PORT || (isReplit ? process.env.PORT : undefined) || '8081';
+const port = Number(portValue);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  console.error(`Invalid Expo port: ${portValue}`);
+  process.exit(1);
+}
+
 const env = {
   ...process.env,
-  EXPO_PACKAGER_PROXY_URL: `https://${expoPackagerDomain}`,
-  EXPO_PUBLIC_DOMAIN: devDomain,
-  EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: publishableKey,
-  EXPO_PUBLIC_CLERK_PROXY_URL: clerkProxyUrl,
-  REACT_NATIVE_PACKAGER_HOSTNAME: devDomain,
+  EXPO_PUBLIC_DEMO_MODE: demoMode ? 'true' : 'false',
 };
-if (process.env.REPL_ID) env.EXPO_PUBLIC_REPL_ID = process.env.REPL_ID;
 
-const expo = spawn(
-  'pnpm',
-  ['exec', 'expo', 'start', '--localhost', '--port', process.env.PORT],
-  { stdio: 'inherit', env },
-);
+if (apiUrl) env.EXPO_PUBLIC_API_URL = apiUrl;
+if (publishableKey) env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY = publishableKey;
+
+if (legacyDomain) {
+  env.EXPO_PUBLIC_DOMAIN = legacyDomain;
+}
+
+const proxyUrl =
+  process.env.CLERK_PROXY_URL && legacyDomain
+    ? `https://${legacyDomain}${process.env.CLERK_PROXY_URL}`
+    : process.env.EXPO_PUBLIC_CLERK_PROXY_URL;
+
+if (proxyUrl) {
+  env.EXPO_PUBLIC_CLERK_PROXY_URL = proxyUrl;
+} else {
+  delete env.EXPO_PUBLIC_CLERK_PROXY_URL;
+}
+
+if (isReplit) {
+  const expoPackagerDomain =
+    process.env.REPLIT_EXPO_DEV_DOMAIN || process.env.REPLIT_DEV_DOMAIN;
+  env.EXPO_PACKAGER_PROXY_URL = `https://${expoPackagerDomain}`;
+  env.REACT_NATIVE_PACKAGER_HOSTNAME = process.env.REPLIT_DEV_DOMAIN;
+  if (process.env.REPL_ID) {
+    env.EXPO_PUBLIC_REPL_ID = process.env.REPL_ID;
+  }
+}
+
+const args = [
+  'exec',
+  'expo',
+  'start',
+  isReplit ? '--localhost' : '--lan',
+  '--port',
+  String(port),
+];
+const expo = spawn(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', args, {
+  stdio: 'inherit',
+  cwd: projectRoot,
+  env,
+  shell: process.platform === 'win32',
+});
 
 expo.on('error', (error) => {
   console.error(`Could not start Expo: ${error.message}`);
-  process.exit(1);
+  process.exitCode = 1;
 });
+
 expo.on('exit', (code, signal) => {
   process.exitCode = code ?? (signal ? 1 : 0);
 });
-process.on('SIGINT', () => expo.kill('SIGINT'));
-process.on('SIGTERM', () => expo.kill('SIGTERM'));
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    if (!expo.killed) {
+      expo.kill(signal);
+    }
+  });
+}

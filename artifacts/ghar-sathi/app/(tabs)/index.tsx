@@ -109,7 +109,7 @@ export default function DiscoverScreen() {
         <EmptyState
           icon="user"
           title="Finish your profile first"
-          description="A complete profile helps Ghar Sathi show the right local matches."
+          description="A complete profile helps MAID.com show the right local matches."
           action={<ActionButton label="Set up profile" onPress={() => router.replace('/onboarding')} />}
         />
       </Screen>

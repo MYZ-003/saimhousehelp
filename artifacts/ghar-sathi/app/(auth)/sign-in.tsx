@@ -16,8 +16,10 @@ import {
 } from '@/components/GharSathiUI';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/lib/locale';
+import { DemoSignInScreen } from '@/app/demo-auth-screens';
 
 WebBrowser.maybeCompleteAuthSession();
+const demoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 
 function readableError(error: unknown) {
   const authError = error as { errors?: Array<{ longMessage?: string; message?: string }> };
@@ -46,7 +48,7 @@ function GoogleButton({ onError }: { onError: (message: string) => void }) {
       const result = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl: AuthSession.makeRedirectUri({
-          scheme: 'ghar-sathi',
+          scheme: 'maid-com',
           path: 'oauth-native-callback',
         }),
       });
@@ -78,7 +80,7 @@ function GoogleButton({ onError }: { onError: (message: string) => void }) {
   );
 }
 
-export default function SignInScreen() {
+function ClerkSignInScreen() {
   const router = useRouter();
   const { signIn, fetchStatus } = useSignIn();
   const { isSignedIn } = useAuth();
@@ -217,7 +219,7 @@ export default function SignInScreen() {
           <GoogleButton onError={setError} />
         </Surface>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 8 }}>
-          <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>New to Ghar Sathi?</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>New to MAID.com?</Text>
           <Link href="/(auth)/sign-up" style={{ color: colors.primary, fontSize: 14, fontWeight: '700' }}>
             {t('signUp')}
           </Link>
@@ -228,4 +230,8 @@ export default function SignInScreen() {
       </ContentScroll>
     </Screen>
   );
+}
+
+export default function SignInScreen() {
+  return demoMode ? <DemoSignInScreen /> : <ClerkSignInScreen />;
 }

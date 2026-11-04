@@ -49,7 +49,7 @@ export default function AlertsScreen() {
           data={notifications.data ?? []}
           keyExtractor={(item) => item.id}
           scrollEnabled={!!notifications.data?.length}
-          ListHeaderComponent={error ? <InlineMessage text={error} /> : null}
+          ListHeaderComponent={error ? <InlineMessage text={error} /> : undefined}
           contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 30, gap: 10 }}
           renderItem={({ item }) => (
             <Pressable

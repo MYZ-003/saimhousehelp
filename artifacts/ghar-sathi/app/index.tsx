@@ -5,8 +5,54 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { ActionButton, BrandHeader, InlineMessage, Screen } from '@/components/GharSathiUI';
 import { useColors } from '@/hooks/useColors';
 import { useGetMe } from '@workspace/api-client-react';
+import { useDemoAuth } from '@/lib/demo-auth';
 
-export default function EntryScreen() {
+const demoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+
+function DemoEntryScreen() {
+  const router = useRouter();
+  const colors = useColors();
+  const { isLoaded, user } = useDemoAuth();
+  const me = useGetMe({
+    query: { queryKey: ['get-me', user?.id], enabled: isLoaded && !!user, retry: 1 },
+  });
+
+  useEffect(() => {
+    if (isLoaded && !user) router.replace('/(auth)/sign-in');
+    if (me.data?.profile) router.replace('/(tabs)');
+    if (me.data && !me.data.profile) router.replace('/onboarding');
+  }, [isLoaded, user, me.data, router]);
+
+  if (!isLoaded || (user && me.isLoading)) {
+    return (
+      <Screen style={{ alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+        <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>Opening your local demo…</Text>
+      </Screen>
+    );
+  }
+
+  if (!user) return null;
+
+  if (me.isError) {
+    return (
+      <Screen style={{ paddingHorizontal: 24, justifyContent: 'center' }}>
+        <View style={{ gap: 18 }}>
+          <BrandHeader eyebrow="MAID.com · local demo" />
+          <Text style={{ color: colors.foreground, fontSize: 24, lineHeight: 31, fontWeight: '700' }}>
+            Could not load this demo profile.
+          </Text>
+          <InlineMessage text={me.error instanceof Error ? me.error.message : 'Local demo request failed.'} tone="info" />
+          <ActionButton label="Retry" variant="outline" onPress={() => void me.refetch()} loading={me.isFetching} />
+        </View>
+      </Screen>
+    );
+  }
+
+  return null;
+}
+
+function ClerkEntryScreen() {
   const router = useRouter();
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
@@ -51,4 +97,8 @@ export default function EntryScreen() {
   }
 
   return null;
+}
+
+export default function EntryScreen() {
+  return demoMode ? <DemoEntryScreen /> : <ClerkEntryScreen />;
 }

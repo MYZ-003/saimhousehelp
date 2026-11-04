@@ -158,7 +158,7 @@ export default function OnboardingScreen() {
         <LanguageSwitcher />
         <View style={{ gap: 7 }}>
           <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700', letterSpacing: 1.2 }}>
-            GHAR SATHI · SETUP
+            MAID.com · SETUP
           </Text>
           <Text style={{ color: colors.foreground, fontSize: 28, lineHeight: 34, fontWeight: '700' }}>
             Let’s set up your profile

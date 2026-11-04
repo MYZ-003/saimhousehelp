@@ -6,9 +6,11 @@ import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
-import { setAuthTokenGetter, setBaseUrl } from '@workspace/api-client-react';
+import { setAuthTokenGetter, setBaseUrl, setFetchInterceptor } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LanguageProvider } from '@/lib/locale';
+import { DemoAuthProvider } from '@/lib/demo-auth';
+import { handleDemoApiRequest } from '@/lib/demo-api';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -23,18 +25,27 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
+const demoMode = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+const apiBaseUrl =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : undefined);
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
-if (!domain) {
-  throw new Error('Missing EXPO_PUBLIC_DOMAIN. Start Ghar Sathi with its configured Expo workflow.');
+if (demoMode && !__DEV__) {
+  throw new Error('Local demo mode is only available in Expo development builds.');
 }
-if (!publishableKey) {
-  throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY. Configure the Clerk publishable key in the Expo workflow.');
+if (!demoMode && !apiBaseUrl) {
+  throw new Error('Missing EXPO_PUBLIC_API_URL. Set the API address in the project .env file.');
+}
+if (!demoMode && !publishableKey) {
+  throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY. Add the Clerk publishable key to the project .env file.');
 }
 
-setBaseUrl(`https://${domain}`);
+setBaseUrl(demoMode ? 'http://maid-com-demo.local' : apiBaseUrl ?? null);
+setFetchInterceptor(demoMode ? handleDemoApiRequest : null);
 
 function RootLayoutNav() {
   return (
@@ -66,6 +77,10 @@ function ApiAuthBridge() {
     }
   }, [userId]);
 
+  return <AppShell />;
+}
+
+function AppShell() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
@@ -74,6 +89,14 @@ function ApiAuthBridge() {
         </LanguageProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function DemoApp() {
+  return (
+    <DemoAuthProvider>
+      <AppShell />
+    </DemoAuthProvider>
   );
 }
 
@@ -97,15 +120,19 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <ClerkProvider
-            publishableKey={publishableKey!}
-            tokenCache={tokenCache}
-            proxyUrl={proxyUrl}
-          >
-            <ClerkLoaded>
-              <ApiAuthBridge />
-            </ClerkLoaded>
-          </ClerkProvider>
+          {demoMode ? (
+            <DemoApp />
+          ) : (
+            <ClerkProvider
+              publishableKey={publishableKey!}
+              tokenCache={tokenCache}
+              proxyUrl={proxyUrl}
+            >
+              <ClerkLoaded>
+                <ApiAuthBridge />
+              </ClerkLoaded>
+            </ClerkProvider>
+          )}
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

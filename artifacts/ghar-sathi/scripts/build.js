@@ -143,7 +143,7 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
     process.env.VITE_CLERK_PUBLISHABLE_KEY ||
     process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
   if (!clerkPublishableKey) {
-    throw new Error('Missing Clerk publishable key for the Ghar Sathi Expo build.');
+    throw new Error('Missing Clerk publishable key for the MAID.com Expo build.');
   }
   const clerkProxyUrl = process.env.CLERK_PROXY_URL
     ? `https://${expoPublicDomain}${process.env.CLERK_PROXY_URL}`

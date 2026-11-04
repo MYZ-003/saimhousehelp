@@ -1,6 +1,6 @@
 kind = "mobile"
 previewPath = "/"
-title = "Ghar Sathi"
+title = "MAID.com"
 description = "A two-sided house-help marketplace in Pakistan. Clients discover nearby verified helpers, agree on pay and working hours, and chat; helpers set their skills, location, and rates and respond to work offers."
 version = "1.0.0"
 id = "artifacts/ghar-sathi"

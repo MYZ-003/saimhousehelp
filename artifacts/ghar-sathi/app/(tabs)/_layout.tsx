@@ -85,7 +85,7 @@ function ClassicTabLayout() {
         options={{
           title: t('discover'),
           tabBarLabel: t('discover'),
-          tabBarIcon: ({ color }) => <Feather name="search" size={21} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="search" size={21} color={String(color)} />,
         }}
       />
       <Tabs.Screen
@@ -93,7 +93,7 @@ function ClassicTabLayout() {
         options={{
           title: t('requests'),
           tabBarLabel: t('requests'),
-          tabBarIcon: ({ color }) => <Feather name="inbox" size={21} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="inbox" size={21} color={String(color)} />,
         }}
       />
       <Tabs.Screen
@@ -101,7 +101,7 @@ function ClassicTabLayout() {
         options={{
           title: t('chats'),
           tabBarLabel: t('chats'),
-          tabBarIcon: ({ color }) => <Feather name="message-circle" size={21} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="message-circle" size={21} color={String(color)} />,
         }}
       />
       <Tabs.Screen
@@ -109,7 +109,7 @@ function ClassicTabLayout() {
         options={{
           title: t('alerts'),
           tabBarLabel: t('alerts'),
-          tabBarIcon: ({ color }) => <Feather name="bell" size={21} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="bell" size={21} color={String(color)} />,
         }}
       />
       <Tabs.Screen
@@ -117,7 +117,7 @@ function ClassicTabLayout() {
         options={{
           title: t('profile'),
           tabBarLabel: t('profile'),
-          tabBarIcon: ({ color }) => <Feather name="user" size={21} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="user" size={21} color={String(color)} />,
         }}
       />
     </Tabs>

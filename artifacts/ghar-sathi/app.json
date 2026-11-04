@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Ghar Sathi",
-    "slug": "ghar-sathi",
+    "name": "MAID.com",
+    "slug": "maid-com",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ghar-sathi",
+    "scheme": "maid-com",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false
